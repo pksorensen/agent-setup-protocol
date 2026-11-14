@@ -21,6 +21,7 @@ const PROFILE_DOC = `{
     "display_name": "Example Platform",
     "origin": "https://platform.example"
   },
+  "subject": { "handle": "a-handle" },
   "default": "acme",
   "profiles": [{
     "id": "acme",

@@ -24,24 +24,35 @@ parameter in place of the token.
     "display_name": "Example Platform",
     "origin": "https://platform.example"
   },
+  "subject": {
+    "handle": "a-handle",
+    "display_name": "The signed-in person"
+  },
   "default": "acme",
   "profiles": [
     {
       "id": "acme",
       "display_name": "Acme (production)",
+      "description": "Acme's production workspace on this platform.",
       "group": "Acme",
       "provider": {
         "base_url": "https://gw.platform.example/openai/v1",
         "wire_api": "responses",
         "auth": { "env_var": "ACME_API_KEY" }
       },
-      "model": "a-model-the-platform-offers",
+      "model": {
+        "default": "a-model-the-platform-offers",
+        "allow": ["a-model-the-platform-offers", "another-one"]
+      },
       "mcp_servers": [
         {
           "name": "acme",
           "url": "https://platform.example/acme/mcp",
           "auth": { "env_var": "ACME_MCP_TOKEN" }
         }
+      ],
+      "marketplaces": [
+        { "name": "acme-plugins", "url": "https://platform.example/acme/marketplace.json" }
       ],
       "credential": "https://platform.example/asp/v1/acme/credential"
     },
@@ -68,6 +79,9 @@ are in force, leaving the model route alone, is a complete and conforming profil
 | `source.id` | MUST | Short stable identifier for this platform, unique within the platform's own naming only. |
 | `source.display_name` | MUST | What a client shows when it names the platform. |
 | `source.origin` | MUST | The origin the client connected to. |
+| `subject` | SHOULD | Who the platform resolved the token to (below). |
+| `subject.handle` | MUST, if `subject` | The person's identifier on this platform, or `null` where it has none. |
+| `subject.display_name` | MAY | A name to show. |
 | `default` | SHOULD | The `id` of the profile to offer first. |
 | `profiles` | MUST | Array, possibly empty. |
 
@@ -81,16 +95,37 @@ is different from being unauthenticated and MUST be reported differently.
 |---|---|---|
 | `id` | MUST | Stable within `source`. Not assumed unique across platforms (§4). |
 | `display_name` | MUST | What the person sees in a list. |
+| `description` | MAY | One sentence a client MAY show beside the name. |
 | `group` | MAY | A label for grouping related profiles in a list. |
 | `provider.base_url` | MUST, if `provider` | Absolute URL of the model endpoint. |
 | `provider.wire_api` | MUST, if `provider` | The request shape the endpoint speaks. |
 | `provider.auth.env_var` | SHOULD, if `provider` | The **name** of the variable the credential is placed in. |
-| `model` | MAY | A model the platform offers on this profile. Advisory. |
+| `model.default` | MAY | A model the platform suggests for this profile. |
+| `model.allow` | MAY | Models the platform offers. Advisory, and never a security boundary: the platform enforces its own policy at the endpoint, because a client is free to ignore this and an attacker certainly will. |
 | `mcp_servers[].name` | MUST, if present | Name the server is registered under. |
 | `mcp_servers[].url` | MUST, if present | Absolute URL of the server. |
 | `mcp_servers[].auth.env_var` | MAY | The **name** of the variable carrying the server's credential. |
+| `marketplaces[].name` | MUST, if present | Name the marketplace is registered under. |
+| `marketplaces[].url` | MUST, if present | Absolute URL of the marketplace manifest. |
 | `credential` | MAY | Absolute URL the client fetches a credential value from, per run. |
 | `expires_at` | MAY | RFC 3339 instant after which the client SHOULD re-fetch the document. |
+
+### Subject
+
+`subject` exists so that a client can say *whose* profiles these are without
+decoding the access token, which it has no business parsing. A client SHOULD show
+it when it names the platform, because a person holding profiles from several
+platforms needs to see which account each list came from.
+
+`handle` MAY be `null`: a platform that has no notion of a handle is conforming, and
+a client MUST render that case rather than treating it as a malformed document.
+
+### Marketplaces
+
+A `marketplaces` entry is loaded eagerly by some tools, and one whose manifest does
+not resolve can be a hard error that disables every marketplace command rather than
+just its own. A platform therefore MUST NOT publish a marketplace it cannot serve a
+manifest for, and SHOULD omit the field rather than publish a placeholder.
 
 ## 3. What a profile may never contain
 
