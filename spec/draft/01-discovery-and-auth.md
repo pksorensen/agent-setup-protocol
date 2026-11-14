@@ -94,6 +94,14 @@ rejected. This is stated because the failure is silent: without an audience chec
 any token from the same issuer reads any person's profiles, and nothing in an access
 log distinguishes that from ordinary use.
 
+Where a platform asks a client to request a particular resource indicator (RFC 8707),
+that value MUST be an absolute URI, and a client SHOULD omit the parameter rather than
+forward a value that cannot be one. A bare name is not a resource indicator, and
+publishing one is not a cosmetic error: an authorization server that validates the
+parameter answers `invalid_target` and redirects to the client's loopback, so the
+person's browser never reaches a login page at all and the client is left holding a
+dead callback instead of a message saying what was wrong.
+
 A client MUST NOT write an access token into a configuration file. Where a token or
 key must reach a tool, it travels in an environment variable, and the configuration
 file names the variable rather than carrying its value.
