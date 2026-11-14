@@ -54,6 +54,7 @@ parameter in place of the token.
       "marketplaces": [
         { "name": "acme-plugins", "url": "https://platform.example/acme/marketplace.json" }
       ],
+      "repository": "https://github.example/acme/acme.git",
       "credential": "https://platform.example/asp/v1/acme/credential"
     },
     {
@@ -105,6 +106,7 @@ is different from being unauthenticated and MUST be reported differently.
 | `mcp_servers[].name` | MUST, if present | Name the server is registered under. |
 | `mcp_servers[].url` | MUST, if present | Absolute URL of the server. |
 | `mcp_servers[].auth.env_var` | MAY | The **name** of the variable carrying the server's credential. |
+| `repository` | MAY | An `https` git URL for the code this profile is about. A remote, never a local path: whether to obtain it, and where it lands, is the client's decision alone. |
 | `marketplaces[].name` | MUST, if present | Name the marketplace is registered under. |
 | `marketplaces[].url` | MUST, if present | Absolute URL of the marketplace manifest. |
 | `credential` | MAY | Absolute URL the client fetches a credential value from, per run. |
