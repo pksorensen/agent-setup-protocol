@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      # Runs before anything is installed: a contributor's registry entry is
+      # checked by the repository's own code and nothing else.
+      - name: Validate registry entries
+        run: node tools/validate-registry.mjs
+
+      - run: npm ci --no-audit --no-fund
+        working-directory: site
+      - run: npm run typecheck
+        working-directory: site
+      - run: npm run build
+        working-directory: site

@@ -1,0 +1,8 @@
+The specification prose in spec/ and bindings/, and the human-facing text of the
+site, are licensed under the Creative Commons Attribution 4.0 International licence
+(CC-BY-4.0): https://creativecommons.org/licenses/by/4.0/
+
+Everything else in this repository, including schema/, registry/ tooling, the
+conformance verifier, the GitHub workflows and the source of site/, is licensed
+under the Apache License 2.0, as stated in LICENSE. Where the boundary is unclear,
+Apache-2.0 governs.

@@ -1,0 +1,8 @@
+{
+  "id": "your-platform",
+  "origin": "https://platform.example",
+  "roles": ["platform"],
+  "reachability": "public",
+  "contact": "someone@platform.example",
+  "listed_by": "your-github-handle"
+}

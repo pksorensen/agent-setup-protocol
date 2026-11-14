@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentsetupprotocol.com/schema/registry-entry.json",
+  "title": "Registry entry",
+  "description": "What the author of a pull request asserts. Everything that can be checked is derived from the platform's own documents by the continuous check, never taken from this file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "origin", "roles", "reachability"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$",
+      "description": "Must equal the filename without .json."
+    },
+    "origin": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://",
+      "description": "Scheme and host only, no path and no trailing slash."
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["platform", "switcher"] }
+    },
+    "reachability": {
+      "enum": ["public", "gated", "private"],
+      "description": "public: the service document is served openly. gated: the host resolves but the document requires a credential. private: not reachable from the internet at all. A private platform is listed on the same terms as any other; reachability is a property of a deployment, never of conformance."
+    },
+    "tools": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string" },
+      "description": "Binding ids this platform publishes profiles for."
+    },
+    "contact": { "type": "string" },
+    "listed_by": { "type": "string", "description": "The handle opening the pull request." },
+    "documentation": { "type": "string", "format": "uri" }
+  }
+}
