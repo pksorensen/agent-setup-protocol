@@ -72,6 +72,22 @@ parameter in place of the token.
 The second profile carries no `provider`. A profile that only changes which servers
 are in force, leaving the model route alone, is a complete and conforming profile.
 
+**An absent `provider` is an instruction, not an omission.** Where a profile carries
+no `provider` block, a client MUST leave the reader's own model configuration exactly
+as it found it: the account they are signed in to, the model they chose, the endpoint
+their agent already talks to. It MUST NOT substitute a default of its own, and it MUST
+NOT ask the platform for one. This is the common case, and it is what makes a platform
+safe to connect to: a platform that configures context has no business touching the
+reader's relationship with a model vendor, and most platforms have no model endpoint to
+offer in the first place. A platform that does run one says so on the service document
+with `publishes_provider`, and then says where on the profile.
+
+The two cases are deliberately not symmetric. A platform that publishes no provider
+needs the reader to bring their own; a platform that publishes one is usually doing it
+because the reader's calls must go through something the platform owns, for a quota, a
+contract or a record. Neither is the default for the other, so a client reads it from
+the document rather than inferring it from the platform's kind.
+
 ### Document fields
 
 | Field | | Meaning |
