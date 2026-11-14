@@ -1,0 +1,46 @@
+name: deploy
+
+# Only a push to main deploys, which on a public repository means only someone with
+# write access can reach the self-hosted runner. Pull requests run ci.yml on
+# GitHub-hosted runners and never touch this workflow.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: node tools/validate-registry.mjs
+      - run: npm ci --no-audit --no-fund
+        working-directory: site
+      - run: npm run typecheck
+        working-directory: site
+      - run: npm run build
+        working-directory: site
+
+  deploy:
+    needs: check
+    runs-on: [self-hosted, devcontainer-runner]
+    steps:
+      - uses: actions/checkout@v4
+      # The application is resolved from this repository, which owns exactly one.
+      # Naming it anyway: a selector that does not resolve fails the job rather
+      # than falling back to some other application.
+      - uses: pksorensen/pks-cli/.github/actions/coolify-deploy@main
+        with:
+          app-name: agent-setup-protocol
+          coolify-app: agent-setup-protocol
+          environment: production
+          production-url: https://agentsetupprotocol.com
