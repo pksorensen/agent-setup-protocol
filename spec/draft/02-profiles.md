@@ -117,11 +117,13 @@ is different from being unauthenticated and MUST be reported differently.
 | `provider.base_url` | MUST, if `provider` | Absolute URL of the model endpoint. |
 | `provider.wire_api` | MUST, if `provider` | The request shape the endpoint speaks. |
 | `provider.auth.env_var` | SHOULD, if `provider` | The **name** of the variable the credential is placed in. |
+| `provider.auth.header` | MAY | The header to send the value in, instead of as a bearer token. |
 | `model.default` | MAY | A model the platform suggests for this profile. |
 | `model.allow` | MAY | Models the platform offers. Advisory, and never a security boundary: the platform enforces its own policy at the endpoint, because a client is free to ignore this and an attacker certainly will. |
 | `mcp_servers[].name` | MUST, if present | Name the server is registered under. |
 | `mcp_servers[].url` | MUST, if present | Absolute URL of the server. |
 | `mcp_servers[].auth.env_var` | MAY | The **name** of the variable carrying the server's credential. |
+| `mcp_servers[].auth.header` | MAY | As `provider.auth.header`, for this server. |
 | `repository` | MAY | An `https` git URL for the code this profile is about. A remote, never a local path: whether to obtain it, and where it lands, is the client's decision alone. |
 | `marketplaces[].name` | MUST, if present | Name the marketplace is registered under. |
 | `marketplaces[].url` | MUST, if present | Absolute URL of the marketplace manifest. |
@@ -191,6 +193,23 @@ the platform's side take effect without the person doing anything.
 
 A client MUST NOT echo a credential value into logs, terminal output, error
 messages, or crash reports.
+
+### 5.1 Where the credential is sent
+
+A credential is sent as a bearer token unless the profile says otherwise. Where
+`auth.header` is present, the client MUST send the value in a request header of that
+name, with no scheme prefix, and MUST NOT also send it as a bearer token.
+
+This exists because a gateway can be unable to read a bearer token. An API gateway
+that authenticates by matching a subscription key in its own header cannot match that
+key behind a `Bearer ` prefix, so a client that assumes bearer gets a 401 from a
+platform that handed it a perfectly good credential — and a 401 reads as a
+permissions problem, which sends whoever is debugging it to the wrong place entirely.
+A platform in that position has no way to say so with `env_var` alone.
+
+`auth.header` names where the value goes. It does not carry the value, and the rule in
+§5 is unchanged: only the variable's name appears in a document or a configuration
+file.
 
 ## 6. Refresh
 
