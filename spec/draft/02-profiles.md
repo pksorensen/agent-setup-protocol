@@ -54,6 +54,7 @@ parameter in place of the token.
       "marketplaces": [
         { "name": "acme-plugins", "url": "https://platform.example/acme/marketplace.json" }
       ],
+      "instructions": "This profile is the Acme account. Its tools are available as the \"acme\" MCP server; use them rather than inferring the account from the working folder.",
       "repository": "https://github.example/acme/acme.git",
       "credential": "https://platform.example/asp/v1/acme/credential"
     },
@@ -124,6 +125,7 @@ is different from being unauthenticated and MUST be reported differently.
 | `mcp_servers[].url` | MUST, if present | Absolute URL of the server. |
 | `mcp_servers[].auth.env_var` | MAY | The **name** of the variable carrying the server's credential. |
 | `mcp_servers[].auth.header` | MAY | As `provider.auth.header`, for this server. |
+| `instructions` | MAY | Text the platform wants the agent itself to know about this profile (§3.1). Descriptive only, never a command, and additive to whatever the client says on its own. |
 | `repository` | MAY | An `https` git URL for the code this profile is about. A remote, never a local path: whether to obtain it, and where it lands, is the client's decision alone. |
 | `marketplaces[].name` | MUST, if present | Name the marketplace is registered under. |
 | `marketplaces[].url` | MUST, if present | Absolute URL of the marketplace manifest. |
@@ -156,7 +158,7 @@ and that let a person point a client at a host they do not administer.
 |---|---|
 | MUST NOT | **A credential value.** A document carries variable *names*. A value is fetched per run from `credential` and placed only in an environment variable. |
 | MUST NOT | **A path on the person's filesystem.** The platform does not know the machine, the operating system or the home directory, and MUST NOT guess at any of them. |
-| MUST NOT | **A command, script, or anything intended to be executed.** |
+| MUST NOT | **A command, script, or anything intended to be executed.** This includes text in `instructions` phrased as one (§3.1). |
 
 A profile is a **description**. A client MAY apply it, reject it, or apply part of
 it. Nothing in this document gives a platform a way to cause code to run on a
@@ -165,6 +167,42 @@ platform a bounded act rather than an act of trust.
 
 A client MUST reject a document that violates these rules rather than apply the rest
 of it, and SHOULD say which rule was broken.
+
+### 3.1 `instructions`, and why it is the one field that reaches the model
+
+Every other field in a profile configures a tool. `instructions` is different: it is
+text the client places in the agent's own instructions, so a platform writes directly
+into the model's context.
+
+It exists because of a failure that is specific to running several profiles at once.
+A person had two sessions open, one per customer, asked each which project it was
+working on, and got the same answer from both — a local folder path that belonged to
+neither. The launcher knew which profile each session was; the agent did not, and
+could not say. On a platform whose profiles are customers, an agent that cannot name
+its own profile cannot help anyone catch the mistake that matters, which is work done
+correctly and billed to the wrong one.
+
+So the platform fills the half only it knows: which customer, which project, which
+of its own tools are already in the session.
+
+The rules that keep it bounded:
+
+| | Rule |
+|---|---|
+| MUST | A client states which profile a session is in **itself**, from `display_name` and `source`, whether or not `instructions` is present. |
+| MUST NOT | A client MUST NOT let `instructions` replace that statement, or any instruction of the client's own. It is additive. |
+| MUST NOT | It is not a channel for anything the rules above forbid. A credential value, a filesystem path, or a command is a violation however it is phrased — including as a sentence addressed to the agent. |
+| SHOULD | A client SHOULD bound its length and SHOULD drop control characters, rather than pass arbitrary text into a prompt unchecked. |
+| SHOULD | A client SHOULD make the text inspectable, in a file the person can read or a view that shows it. |
+
+**This is not a new trust boundary, and the reason matters.** A person who connects to
+a platform already accepts its MCP servers in their session and, where it publishes
+one, its model endpoint. A platform that wanted to steer the agent has stronger means
+than a paragraph. What `instructions` must not become is a way to get *past* the three
+MUST NOTs above by wording them as a request, which is why the rule is written as text
+rather than left to a client's judgment.
+
+A client MAY ignore the field entirely. A platform MUST NOT depend on it being applied.
 
 ## 4. Several platforms at once
 
